@@ -46,7 +46,7 @@ func (Producer) Publish(brokerAddress string, topic string, message string) erro
 	return nil
 }
 
-//PublishToJSON is
+//PublishToJSON is Publish into kafka (convert STRUCT to JSON)
 func (p Producer) PublishToJSON(brokerAddress string, topic string, data interface{}) error {
 	jsonMsg, err := json.Marshal(data)
 	if err != nil {
