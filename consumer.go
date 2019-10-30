@@ -2,6 +2,8 @@ package kafka
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 
 	"github.com/Shopify/sarama"
 )
@@ -29,16 +31,14 @@ func Subscribe(brokerAddress string, topic string) {
 		}
 	}()
 
-	//topic := "user-created"
-	//topic := "aaa"
 	// How to decide partition, is it fixed value...?
 	consumer, err := master.ConsumePartition(topic, 0, sarama.OffsetOldest)
 	if err != nil {
 		panic(err)
 	}
 
-	//signals := make(chan os.Signal, 1)
-	//signal.Notify(signals, os.Interrupt)
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
 
 	// Count how many message processed
 	msgCount := 0
@@ -54,13 +54,12 @@ func Subscribe(brokerAddress string, topic string) {
 			case msg := <-consumer.Messages():
 				msgCount++
 				fmt.Println("Received messages" + string(msg.Key) + " VALUE ==>" + string(msg.Value))
+
+			case <-signals:
+				fmt.Println("Interrupt is detected")
+				doneCh <- struct{}{}
 			}
-			/*
-				case <-signals:
-					fmt.Println("Interrupt is detected")
-					doneCh <- struct{}{}
-				}
-			*/
+
 		}
 	}()
 
