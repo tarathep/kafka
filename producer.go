@@ -7,18 +7,20 @@ import (
 	"github.com/Shopify/sarama"
 )
 
-// Producer Kafka by "github.com/Shopify/sarama"
-type Producer struct{}
+//Producer send it out as messages to the Kafka cluster
+type Producer struct {
+	Brokers string
+}
 
 //Publish is publish message to kafka
-func (Producer) Publish(brokerAddress string, topic string, message string) error {
+func (p Producer) Publish(topic string, message string) error {
 
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll
 	config.Producer.Retry.Max = 5
 	config.Producer.Return.Successes = true
 
-	brokers := []string{brokerAddress}
+	brokers := []string{p.Brokers}
 	producer, err := sarama.NewSyncProducer(brokers, config)
 	if err != nil {
 		// Should not reach here
@@ -46,15 +48,15 @@ func (Producer) Publish(brokerAddress string, topic string, message string) erro
 	return nil
 }
 
-//PublishToJSON is Publish into kafka (convert STRUCT to JSON)
-func (p Producer) PublishToJSON(brokerAddress string, topic string, data interface{}) error {
+//PublishToJSON is Publish message to kafka & convert STRUCT to JSON
+func (p Producer) PublishToJSON(topic string, data interface{}) error {
 	jsonMsg, err := json.Marshal(data)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
-	if err := p.Publish(brokerAddress, topic, string(jsonMsg)); err != nil {
+	if err := p.Publish(topic, string(jsonMsg)); err != nil {
 		return err
 	}
 	return nil
